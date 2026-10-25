@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  # 1. Remote Mesh Networking (Tailscale)
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: d2800-tailscale
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - /var/lib/tailscale:/var/lib
+      - /dev/net/tun:/dev/net/tun
+    restart: always
+
+  # 2. Web Server (Apache)
+  apache_web:
+    image: httpd:alpine
+    container_name: homelab_apache
+    ports:
+      - "8080:80"
+    volumes:
+      - /volume1/docker_apps/apache/htdocs:/usr/local/apache2/htdocs
+    restart: unless-stopped
+
+  # 3. Network Ad & Tracker Blocker (Pi-hole)
+  pihole:
+    image: pihole/pihole:latest
+    container_name: homelab_pihole
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8081:80"
+    environment:
+      TZ: "Europe/London"
+    volumes:
+      - /volume1/docker_apps/pihole/etc-pihole:/etc/pihole
+      - /volume1/docker_apps/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+    restart: unless-stopped
+
+  # 4. Password Manager (Vaultwarden / Bitwarden backend)
+  bitwarden:
+    image: vaultwarden/server:latest
+    container_name: homelab_bitwarden
+    ports:
+      - "8082:80"
+    environment:
+      WEBSOCKET_ENABLED: "true"
+    volumes:
+      - /volume1/docker_apps/bitwarden/data:/data
+    restart: unless-stopped
+
+  # 5. Media Server (Jellyfin)
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: homelab_jellyfin
+    ports:
+      - "8096:8096"
+    volumes:
+      - /volume1/docker_apps/jellyfin/config:/config
+      - /volume1/docker_apps/jellyfin/cache:/cache
+      - /volume1/media:/media # Change to your NAS media folder path
+    restart: unless-stopped
