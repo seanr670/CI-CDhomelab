@@ -1,20 +1,6 @@
 version: "3.8"
 
 services:
-  # 1. Remote Mesh Networking (Tailscale)
-  tailscale:
-    image: tailscale/tailscale:latest
-    container_name: tailscale
-    hostname: d2800-tailscale
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    volumes:
-      - /var/lib/tailscale:/var/lib
-      - /dev/net/tun:/dev/net/tun
-    restart: always
-
   # 2. Web Server (Apache)
   apache_web:
     image: httpd:alpine
